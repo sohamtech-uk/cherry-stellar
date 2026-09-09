@@ -73,11 +73,13 @@ Follow the private base README for other required settings and normal company/ad
 
 ## Hosting
 
-### Current validation blocker
+### Extension CI and full-base readiness
 
-On 9 September 2026, public CI passed the private base gitlink check, 25 Node tests, the hosted demo build and PHP syntax checks. Composer refused to resolve the Laravel 10/Testbench 8 test dependencies because of security advisories affecting the available Laravel 10 versions. The extension's six Laravel tests therefore have **not run**. No security advisory checks have been disabled.
+The original test harness used Laravel 10/Testbench 8. Composer blocked its dependency resolution because of Laravel security advisories. The extension harness now uses **Laravel 12.61.1 or newer in the 12.x series and Testbench 10**, with explicit PHPUnit bootstrap, a committed Composer lockfile and an audit gate. This changes only the independently installed extension test environment. Composer advisory protection remains enabled.
 
-The integration PR remains draft. Review/remediate the upstream framework dependencies in the private base, update its pinned commit if necessary, then run the extension tests and the full assembled application's tests in an authorised environment before merging/deploying the full application. The currently deployed standalone Vercel demo uses the separately verified Node SDK stack and has not been redeployed or replaced by this change.
+**The pinned private Cherry Money base is still Laravel 10.** A passing Laravel 12 fixture suite does not certify Laravel 10 compatibility, upgrade the assembled application, or resolve its framework advisories. Before deploying the full application, remediate the private base's dependencies, update the base pin, and run the real application's tests and browser walkthrough in an authorised environment. The public Vercel demonstration uses the separately verified Node SDK stack.
+
+Official references: [Testbench's Laravel version compatibility](https://packages.tools/testbench#version-compatibility), [Laravel's patched signed-URL advisory](https://github.com/laravel/framework/security/advisories/GHSA-crmm-hgp2-wgrp).
 
 The full application needs PHP, a persistent SQL database, durable uploads and a private Node verifier. Use the base's established PHP/container hosting infrastructure with its own secrets and configuration. This PR does not deploy the full application or alter the existing Vercel demo. Vercel's current static/Node deployment cannot supply the full Laravel runtime as configured.
 

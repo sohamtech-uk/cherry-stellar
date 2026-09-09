@@ -23,6 +23,7 @@ class BridgeTest extends TestCase
     protected function getPackageProviders($app) { return [StellarServiceProvider::class]; }
     protected function defineEnvironment($app)
     {
+        $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('test', 8)));
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
         $app['config']->set('cherry-stellar.enabled', true);
