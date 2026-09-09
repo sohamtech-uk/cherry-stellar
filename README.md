@@ -6,6 +6,8 @@ This repository is independently implemented and contains no Cherry Money applic
 
 ## Vercel hosted mode
 
+Live demo: **https://cherry-stellar-beta.vercel.app/**
+
 `npm run build` creates static assets in `dist`; `api/demo.mjs` provides stateless quote/envelope/settlement verification. `vercel.json` configures both. No database credentials or wallet secrets are needed.
 
 **Hosted storage differs from local mode:** each visitor's invoices, signed envelopes and journals persist in their own browser's IndexedDB, isolated by site origin. They are not stored in a shared server ledger, synchronized across devices or backed up. Clearing site data loses the local payment history; do not clear it while a payment is unresolved. Private browsing may discard history at session end.
@@ -16,7 +18,7 @@ To deploy your own copy on Vercel, import the feature branch and use the include
 
 ## Run locally
 
-Install **Node.js 22 or newer**, then:
+Install **Node.js 22**, then:
 
 ```bash
 git clone https://github.com/sohamtech-uk/cherry-stellar.git
@@ -92,9 +94,11 @@ Optional live network test (creates disposable accounts and sends **1.28 CHUSD**
 npm run test:live
 ```
 
-This prints a testnet hash and verifies actual settlement through the same server-side reconciliation logic. It does not exercise the browser interface. Browser walkthrough verification must be performed separately using the steps above.
+This prints a testnet hash and verifies actual settlement through the same server-side reconciliation logic. It does not exercise the browser interface; use the walkthrough above for that.
 
-Verified on 9 September 2026: **20 offline tests passed** and a live **1.28 CHUSD** payment reconciled at ledger **4584091**, with **100 stroops** payment fee and **10 journal entries**. [View the testnet transaction](https://stellar.expert/explorer/testnet/tx/7d6cee65f313944cd970d6661023a570a9a44812b19d269b856751d76271df1c). Testnet history may disappear at a network reset. A browser walkthrough has not yet been verified.
+Verified on 9 September 2026: **24 automated tests passed**, the hosted build passed, and the dependency audit reported no known vulnerabilities. A full browser walkthrough on Vercel created a GBP 1 demo invoice, sent **1.28 CHUSD**, reconciled at ledger **4584384** with **100 stroops** payment fee and **10 journal entries**, then restored the same reconciled record after reload. [View the hosted browser test transaction](https://stellar.expert/explorer/testnet/tx/d7c1d87646aa69b82c32a267383758756578925f3387695d94a2cca4c1240a13).
+
+An earlier independent local smoke test also reconciled [this testnet transaction](https://stellar.expert/explorer/testnet/tx/7d6cee65f313944cd970d6661023a570a9a44812b19d269b856751d76271df1c). Testnet history may disappear at a network reset.
 
 Network access is required to `friendbot.stellar.org` and `horizon-testnet.stellar.org`. Friendbot can be slow or rate limited. A setup error before payment preparation may leave harmless funded test accounts; reload and try again. After preparation always check the saved payment first.
 
@@ -106,7 +110,7 @@ Network access is required to `friendbot.stellar.org` and `horizon-testnet.stell
 - `test/`: offline domain and HTTP integration tests.
 - `scripts/live.mjs`: explicit opt-in testnet smoke test.
 
-Built with Node.js and the official `@stellar/stellar-sdk` (pinned with a lockfile). No Laravel, private repository or Finexer dependency.
+Built with Node.js 22 and the official `@stellar/stellar-sdk` 17.0.1 (pinned with a lockfile). The SDK upgrade includes byte-array/signature API adaptations. `npm audit --omit=dev` reported no known vulnerabilities on 9 September 2026. No Laravel, private repository or Finexer dependency.
 
 Official references: [Stellar networks and testnet resets](https://developers.stellar.org/docs/networks), [creating and funding accounts](https://developers.stellar.org/docs/build/guides/transactions/create-account), [Stellar JavaScript SDK](https://github.com/stellar/js-stellar-sdk).
 
