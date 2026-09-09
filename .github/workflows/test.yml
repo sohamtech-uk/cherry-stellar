@@ -36,5 +36,11 @@ jobs:
         run: find extensions/cherrymoney -name '*.php' -print0 | xargs -0 -n1 php -l
       - run: composer install --no-interaction --prefer-dist
         working-directory: extensions/cherrymoney
+      - name: Export dependency lock for review
+        run: php -r 'echo "DEPENDENCY_LOCK=".base64_encode(gzencode(file_get_contents("composer.lock"))).PHP_EOL;'
+        working-directory: extensions/cherrymoney
+      - name: Audit extension test dependencies
+        run: composer audit --format=plain
+        working-directory: extensions/cherrymoney
       - run: composer test
         working-directory: extensions/cherrymoney
