@@ -73,6 +73,12 @@ Follow the private base README for other required settings and normal company/ad
 
 ## Hosting
 
+### Current validation blocker
+
+On 9 September 2026, public CI passed the private base gitlink check, 25 Node tests, the hosted demo build and PHP syntax checks. Composer refused to resolve the Laravel 10/Testbench 8 test dependencies because of security advisories affecting the available Laravel 10 versions. The extension's six Laravel tests therefore have **not run**. No security advisory checks have been disabled.
+
+The integration PR remains draft. Review/remediate the upstream framework dependencies in the private base, update its pinned commit if necessary, then run the extension tests and the full assembled application's tests in an authorised environment before merging/deploying the full application. The currently deployed standalone Vercel demo uses the separately verified Node SDK stack and has not been redeployed or replaced by this change.
+
 The full application needs PHP, a persistent SQL database, durable uploads and a private Node verifier. Use the base's established PHP/container hosting infrastructure with its own secrets and configuration. This PR does not deploy the full application or alter the existing Vercel demo. Vercel's current static/Node deployment cannot supply the full Laravel runtime as configured.
 
 `.vercelignore` excludes the private submodule and assembled runtime. Public GitHub CI explicitly leaves submodules uninitialised and tests the extension against Laravel fixtures. Full-base installation and application smoke tests must run in an authorised private environment; passing fixture tests alone does not certify every upstream feature.
