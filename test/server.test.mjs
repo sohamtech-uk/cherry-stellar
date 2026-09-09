@@ -35,7 +35,7 @@ test('HTTP demo persists a signed payment across restart and rejects cross-origi
     const prepared = await post(`/api/invoices/${record.id}/prepare`, { xdr: tx.toXDR() }); assert.equal(prepared.status, 200);
     await stop(); await start();
     const saved = await (await fetch(origin + '/api/invoices')).json();
-    assert.equal(saved.length, 1); assert.equal(saved[0].status, 'prepared'); assert.equal(saved[0].hash, tx.hash().toString('hex'));
+    assert.equal(saved.length, 1); assert.equal(saved[0].status, 'prepared'); assert.equal(saved[0].hash, Buffer.from(tx.hash()).toString('hex'));
     assert.equal(saved[0].xdr, tx.toXDR()); assert.deepEqual(saved[0].journal, []);
     assert.equal((await post(`/api/invoices/${record.id}/prepare`, { xdr: 'invalid' })).status, 400);
   } finally { if (child) await stop(); await rm(data, { recursive: true, force: true }); }

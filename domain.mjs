@@ -34,11 +34,11 @@ export function prepare(record, xdr, allRecords, now = Date.now()) {
   assert(StrKey.isValidEd25519PublicKey(tx.source) && StrKey.isValidEd25519PublicKey(op.destination) && tx.source !== op.destination, 'Invalid test accounts.');
   assert(!op.source || op.source === tx.source, 'Unexpected operation source.');
   assert(op.asset.code === CODE && op.asset.issuer === tx.source && op.amount === record.assetAmount, 'Payment does not match the quote.');
-  assert(tx.memo.type === 'text' && tx.memo.value.toString() === record.memo, 'Wrong invoice memo.');
+  assert(tx.memo.type === 'text' && Buffer.from(tx.memo.value).toString('utf8') === record.memo, 'Wrong invoice memo.');
   assert(tx.timeBounds?.minTime === '0' && Number(tx.timeBounds.maxTime) === record.expiresAt, 'Wrong payment deadline.');
   assert(Number(tx.fee) > 0 && Number(tx.fee) <= 100000, 'Payment network fee exceeds demo limit.');
-  assert(tx.signatures.length === 1 && Keypair.fromPublicKey(tx.source).verify(tx.hash(), tx.signatures[0].signature()), 'Invalid testnet signature.');
-  const hash = tx.hash().toString('hex');
+  assert(tx.signatures.length === 1 && Keypair.fromPublicKey(tx.source).verify(tx.hash(), tx.signatures[0].signature), 'Invalid testnet signature.');
+  const hash = Buffer.from(tx.hash()).toString('hex');
   assert(!allRecords.some(r => r.id !== record.id && r.hash === hash), 'Payment already assigned.');
   Object.assign(record, { status: 'prepared', xdr, hash, issuer: tx.source, recipient: op.destination });
   return record;
