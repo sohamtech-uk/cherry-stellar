@@ -11,20 +11,18 @@ export async function applyExtension(root, destination, metadata) {
   await cp(resolve(root, 'extensions/cherrymoney/config.php'), resolve(destination, 'config/cherry-stellar.php'));
   const assets = resolve(destination, 'public/cherry-stellar');
   await mkdir(assets, { recursive: true });
-  for (const file of ['app.js', 'style.css']) await cp(resolve(root, 'public', file), resolve(assets, file));
+  await cp(resolve(root, 'public/app.js'), resolve(assets, 'app.js'));
+  await cp(resolve(root, 'extensions/cherrymoney/style.css'), resolve(assets, 'style.css'));
   await cp(resolve(root, 'extensions/cherrymoney/adapter.js'), resolve(assets, 'adapter.js'));
   await cp(resolve(root, 'node_modules/@stellar/stellar-sdk/dist/stellar-sdk.min.js'), resolve(assets, 'stellar-sdk.js'));
-  let html = await readFile(resolve(root, 'public/index.html'), 'utf8');
-  html = html.replace('<head>', '<head><meta name="csrf-token" content="{{ csrf_token() }}">')
-    .replaceAll('href="/style.css"', 'href="/cherry-stellar/style.css"')
-    .replace('src="/stellar-sdk.js"', 'src="/cherry-stellar/stellar-sdk.js"')
-    .replace('<script defer src="/app.js">', '<script defer src="/cherry-stellar/adapter.js"></script><script defer src="/cherry-stellar/app.js">')
-    .replace('href="/" class="brand"', 'href="/home" class="brand"')
-    .replace('<main>', '<main><p><a href="/home">← Cherry Money workspace</a></p>')
-    .replace('Local demo records only', 'Company-scoped demo records · Cherry Money base');
+  const html = await readFile(resolve(root, 'public/index.html'), 'utf8');
+  const content = [...html.matchAll(/<main>([\s\S]*?)<\/main>/g)];
+  if (content.length !== 1) throw new Error('Stellar workspace markup changed; review the shared layout integration.');
+  const workspace = content[0][1]
+    .replace('Standalone payment lab · Local demo records only', 'Cherry Pay · Company-scoped demo records');
   await mkdir(resolve(destination, 'resources/views/cherry-stellar'), { recursive: true });
   await cp(resolve(root, 'extensions/cherrymoney/views'), resolve(destination, 'resources/views/cherry-stellar'), { recursive: true });
-  await writeFile(resolve(destination, 'resources/views/cherry-stellar/index.blade.php'), html);
+  await writeFile(resolve(destination, 'resources/views/cherry-stellar/content.blade.php'), workspace);
   const bootstrapPath = resolve(destination, 'bootstrap/app.php');
   const bootstrap = await readFile(bootstrapPath, 'utf8');
   if ((bootstrap.match(/return \$app;/g) || []).length !== 1) throw new Error('Upstream bootstrap changed; review the integration before proceeding.');

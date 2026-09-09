@@ -36,6 +36,13 @@ test('full-base assembly preserves existing modules, pins source and refuses ove
     assert.match(await readFile(join(runtime, 'bootstrap/app.php'), 'utf8'), /StellarServiceProvider/);
     const page = await readFile(join(runtime, 'resources/views/cherry-stellar/index.blade.php'), 'utf8');
     assert.match(page, /csrf_token/); assert.match(page, /cherry-stellar\/adapter.js/); assert.doesNotMatch(page, /src="\/app.js"/);
+    assert.match(page, /@extends\('layout.main'\)/);
+    assert.match(page, /id="content_wrapper"/);
+    assert.match(page, /@include\('cherry-stellar.content'\)/);
+    const content = await readFile(join(runtime, 'resources/views/cherry-stellar/content.blade.php'), 'utf8');
+    assert.match(content, /id="invoice-form"/);
+    assert.match(content, /id="pay"/);
+    assert.doesNotMatch(content, /<html|<head>|<body|<main>|Cherry Money workspace/);
     const menu = await readFile(join(runtime, 'resources/views/layout/menu.blade.php'), 'utf8');
     assert.match(menu, /<li>Existing navigation<\/li>/);
     assert.match(menu, /@include\("cherry-stellar.navigation"\)/);

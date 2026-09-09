@@ -1,5 +1,8 @@
 /* Disposable keys remain in memory. Only signed, expiring TESTNET XDR is persisted. */
-const $ = id => document.getElementById(id);
+(() => {
+const workspace = document.getElementById('cherry-stellar') || document.querySelector('main');
+if (!workspace) return;
+const $ = id => workspace.querySelector('#' + id);
 const S = window.StellarSdk;
 const HORIZON = 'https://horizon-testnet.stellar.org';
 let selected, records = [], busy = false;
@@ -34,7 +37,7 @@ function render() {
     $('purchase-invoice-link').href = `/purchase-invoice/${purchase.id}/edit`;
     $('purchase-invoice-link').textContent = `Open Cherry Money purchase invoice ${purchase.number}`;
   }
-  document.querySelectorAll('button').forEach(button => { button.disabled = busy; });
+  workspace.querySelectorAll('button').forEach(button => { button.disabled = busy; });
   if (!selected) return;
   const r = selected;
   $('supplier-title').textContent = `${r.supplier} · ${r.country} · ${r.memo}`;
@@ -139,3 +142,4 @@ $('pay').onclick = () => action(pay);
 $('check').onclick = () => action(confirm);
 $('refresh').onclick = () => action(refresh);
 refresh().catch(error => message(error.message));
+})();

@@ -13,7 +13,7 @@ COPY public/ public/
 COPY extensions/cherrymoney/src/ extensions/cherrymoney/src/
 COPY extensions/cherrymoney/views/ extensions/cherrymoney/views/
 COPY extensions/cherrymoney/migrations/ extensions/cherrymoney/migrations/
-COPY extensions/cherrymoney/config.php extensions/cherrymoney/adapter.js extensions/cherrymoney/
+COPY extensions/cherrymoney/config.php extensions/cherrymoney/adapter.js extensions/cherrymoney/style.css extensions/cherrymoney/
 COPY --from=cherry_money /var/www/html/bootstrap/app.php /overlay/bootstrap/app.php
 COPY --from=cherry_money /var/www/html/resources/views/layout/menu.blade.php /overlay/resources/views/layout/menu.blade.php
 ARG CHERRY_MONEY_IMAGE
