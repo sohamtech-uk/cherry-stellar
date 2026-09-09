@@ -4,6 +4,16 @@ A standalone supplier-payment demo: invoice → illustrative GBP quote → Stell
 
 This repository is independently implemented and contains no Cherry Money application code, database, credentials or private Git history. It requires no Finexer connectivity.
 
+## Vercel hosted mode
+
+`npm run build` creates static assets in `dist`; `api/demo.mjs` provides stateless quote/envelope/settlement verification. `vercel.json` configures both. No database credentials or wallet secrets are needed.
+
+**Hosted storage differs from local mode:** each visitor's invoices, signed envelopes and journals persist in their own browser's IndexedDB, isolated by site origin. They are not stored in a shared server ledger, synchronized across devices or backed up. Clearing site data loses the local payment history; do not clear it while a payment is unresolved. Private browsing may discard history at session end.
+
+The server reconstructs illustrative quotes and validates signatures and live Horizon evidence; it never trusts a submitted status, journal, rate or hash. Browser records are visitor-controlled demo data, not tamper-proof accounting. Duplicate prevention is scoped to that browser using IndexedDB unique indexes, atomic writes and Web Locks. The hosted demo is not a multi-user financial service.
+
+To deploy your own copy on Vercel, import the feature branch and use the included configuration. Keep existing Vercel deployment protection settings. Wallet secrets remain browser-memory-only in both modes. The local file server below is unchanged and must still remain loopback-only.
+
 ## Run locally
 
 Install **Node.js 22 or newer**, then:

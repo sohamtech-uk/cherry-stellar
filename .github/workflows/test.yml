@@ -14,3 +14,5 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm test
       - run: node --check public/app.js
+      - run: node --check public/hosted.js
+      - run: npm run build

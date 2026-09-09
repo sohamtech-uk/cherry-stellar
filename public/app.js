@@ -7,6 +7,7 @@ let requestId = crypto.randomUUID();
 const gbp = pence => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(pence / 100);
 const message = text => { $('message').textContent = text; };
 async function api(path, body) {
+  if (window.CherryApi) return window.CherryApi(path, body);
   const response = await fetch('/api/' + path, body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || 'Request failed.');
@@ -67,7 +68,12 @@ async function refresh() {
 async function action(fn) {
   if (busy) return;
   busy = true; render();
-  try { await fn(); }
+  try {
+    if (window.CherryApi) {
+      if (!navigator.locks) throw new Error('Use a current browser with Web Locks support to safely run this hosted demo.');
+      await navigator.locks.request('cherry-stellar-payment', fn);
+    } else await fn();
+  }
   catch (error) { message(error.message); }
   finally { busy = false; await refresh().catch(error => message(error.message)); render(); }
 }
