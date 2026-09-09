@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Cherry Stellar: supplier invoice payments and reconciliation on Stellar testnet."><title>Cherry · Stellar payment lab</title><link rel="stylesheet" href="/style.css"><script defer src="/stellar-sdk.js"></script><script defer src="/app.js"></script></head>
+<body>
+<header><a href="/" class="brand">cherry<span> / stellar</span></a><span class="badge">TESTNET ONLY</span></header>
+<main>
+  <div class="heading"><div><p class="eyebrow">OVERSEAS SUPPLIER PAYMENTS</p><h1>From invoice to evidence.</h1><p>Quote, pay and reconcile a supplier payment in one place.</p></div></div>
+  <aside class="notice">Demo funds only. GBP funding and FX are simulated. CHUSD is a worthless test token, not USDC. No real money or bank payout.</aside>
+  <div class="workspace">
+    <section class="panel"><p class="eyebrow">01 / INVOICE</p><h2>Pay a supplier</h2>
+      <form id="invoice-form">
+        <label for="supplier">Supplier name</label><input id="supplier" name="supplier" maxlength="120" required placeholder="e.g. Lisbon Design Studio">
+        <label for="country">Supplier country</label><select id="country" name="country"><option value="PT">Portugal</option><option value="IN">India</option><option value="US">United States</option><option value="FR">France</option><option value="DE">Germany</option><option value="SG">Singapore</option><option value="AE">United Arab Emirates</option></select>
+        <label for="amount">Invoice amount · GBP</label><input id="amount" name="amount" type="number" min="1" max="10000" step="0.01" value="100" required>
+        <button type="submit">Create invoice & quote</button>
+      </form>
+      <p class="small">Country is a demo scenario; it does not indicate fiat payout coverage.</p>
+    </section>
+    <section class="panel payment"><p class="eyebrow">02 / PAYMENT</p><div class="title-row"><h2>Payment workspace</h2><span id="state" class="badge">READY</span></div>
+      <p id="empty">Create an invoice to see your quote, or reopen one below.</p>
+      <div id="details" hidden>
+        <p id="supplier-title"></p><div class="quote"><span>Supplier receives · test token</span><strong id="token-amount"></strong></div>
+        <dl id="quote-lines"></dl>
+        <p id="deadline" class="small"></p>
+        <div class="actions"><button id="pay" type="button">Send testnet payment</button><button id="check" class="secondary" type="button">Check settlement</button></div>
+        <p class="small">Disposable test accounts are created automatically. No wallet or credentials needed.</p>
+      </div>
+      <p id="message" role="status" aria-live="polite">Ready to create a demo invoice.</p>
+    </section>
+  </div>
+  <section id="evidence" class="panel" hidden><p class="eyebrow">03 / EVIDENCE & RECONCILIATION</p><h2>Payment record</h2><dl id="proof"></dl><a id="explorer" target="_blank" rel="noopener noreferrer">View transaction on Stellar Expert ↗</a>
+    <h3>Demo accounting journal</h3><p class="small">GBP and test XLM balance separately. Network fee covers the invoice payment only; setup costs are excluded.</p>
+    <div class="table-wrap"><table><thead><tr><th>Event</th><th>Account</th><th>Debit</th><th>Credit</th><th>Currency</th></tr></thead><tbody id="journal"></tbody></table></div>
+  </section>
+  <section class="panel"><div class="title-row"><h2>Recent invoices</h2><button id="refresh" class="secondary" type="button">Refresh</button></div><div id="history" class="history"></div></section>
+  <footer>Cherry Stellar · Standalone payment lab · Local demo records only</footer>
+</main></body></html>
