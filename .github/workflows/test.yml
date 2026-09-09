@@ -1,4 +1,4 @@
-name: Test standalone demo
+name: Test Cherry Stellar
 on: [push, pull_request]
 permissions:
   contents: read
@@ -7,6 +7,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Verify private base pointer
+        run: node scripts/check-base.mjs
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -15,4 +19,29 @@ jobs:
       - run: npm test
       - run: node --check public/app.js
       - run: node --check public/hosted.js
+      - run: node --check deploy/azure/apply.mjs && bash -n deploy/azure/start.sh
       - run: npm run build
+  laravel-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, sqlite3, pdo_sqlite, dom, curl
+          tools: composer
+          coverage: none
+      - name: Check extension syntax
+        run: find extensions/cherrymoney deploy/azure -name '*.php' -print0 | xargs -0 -n1 php -l
+      - run: composer install --no-interaction --prefer-dist
+        working-directory: extensions/cherrymoney
+      - name: Validate locked dependencies
+        run: composer validate --no-check-publish
+        working-directory: extensions/cherrymoney
+      - name: Audit extension test dependencies
+        run: composer audit --format=plain
+        working-directory: extensions/cherrymoney
+      - run: composer test
+        working-directory: extensions/cherrymoney

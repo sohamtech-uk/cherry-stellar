@@ -1,0 +1,4 @@
+[submodule "cherrymoney"]
+	path = base/cherrymoney
+	url = git@github.com:sohamtech-uk/cherrymoney.git
+	branch = main
