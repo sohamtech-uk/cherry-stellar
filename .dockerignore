@@ -1,0 +1,12 @@
+.git
+.github
+.runtime
+base
+node_modules
+dist
+data
+.env
+.env.*
+*.log
+extensions/cherrymoney/vendor
+extensions/cherrymoney/.phpunit.cache

@@ -19,6 +19,7 @@ jobs:
       - run: npm test
       - run: node --check public/app.js
       - run: node --check public/hosted.js
+      - run: node --check deploy/azure/apply.mjs && bash -n deploy/azure/start.sh
       - run: npm run build
   laravel-extension:
     runs-on: ubuntu-latest
@@ -33,7 +34,7 @@ jobs:
           tools: composer
           coverage: none
       - name: Check extension syntax
-        run: find extensions/cherrymoney -name '*.php' -print0 | xargs -0 -n1 php -l
+        run: find extensions/cherrymoney deploy/azure -name '*.php' -print0 | xargs -0 -n1 php -l
       - run: composer install --no-interaction --prefer-dist
         working-directory: extensions/cherrymoney
       - name: Validate locked dependencies

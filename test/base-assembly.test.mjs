@@ -20,6 +20,7 @@ test('full-base assembly preserves existing modules, pins source and refuses ove
     await writeFile(join(root, 'base.lock.json'), JSON.stringify({ path: 'base/cherrymoney', commit: sha }));
     await mkdir(join(root, 'scripts'));
     await cp(new URL('../scripts/assemble-base.mjs', import.meta.url), join(root, 'scripts/assemble-base.mjs'));
+    await cp(new URL('../scripts/apply-extension.mjs', import.meta.url), join(root, 'scripts/apply-extension.mjs'));
     await cp(new URL('../extensions', import.meta.url), join(root, 'extensions'), { recursive: true });
     await cp(new URL('../public', import.meta.url), join(root, 'public'), { recursive: true });
     const bundle = 'node_modules/@stellar/stellar-sdk/dist'; await mkdir(join(root, bundle), { recursive: true });
