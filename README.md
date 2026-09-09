@@ -4,6 +4,8 @@ A Cherry Money–based application with a Stellar testnet extension, plus a shar
 
 **Full application:** use the private Cherry Money base pinned in `base/cherrymoney` and `base.lock.json`. This retains all existing application features and adds Stellar under the existing login, company permissions and database. [Full application setup and architecture](docs/cherrymoney-base.md).
 
+Initiating a payment in the full application creates a linked **unpaid draft supplier purchase invoice** in Cherry Money before broadcast. Retries reuse it. Testnet settlement leaves that native draft unpaid and records the demo reconciliation separately.
+
 **Public demo:** the instructions below run the standalone payment lab, without Finexer connectivity. The public repository contains independently authored extension/demo code and a private base reference; it does not publish Cherry Money's source, data, credentials or Git history. Authorised access is required to initialise the full base.
 
 ## Vercel hosted mode

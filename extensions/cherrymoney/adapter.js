@@ -1,4 +1,8 @@
 // Same-origin authenticated Laravel API; no browser-owned invoice database in full-app mode.
+const invoiceNotice = document.createElement('p');
+invoiceNotice.className = 'notice';
+invoiceNotice.textContent = 'Sending a testnet payment also creates an unpaid draft purchase invoice in your Cherry Money company. It is marked TESTNET DEMO. Review it under Purchases; do not approve it as a real supplier bill.';
+document.querySelector('main').prepend(invoiceNotice);
 window.CherryApi = async (path, body) => {
   const response = await fetch('/stellar/api/' + path, {
     method: body === undefined ? 'GET' : 'POST',

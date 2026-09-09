@@ -11,7 +11,7 @@ use Orchestra\Testbench\TestCase;
 class BridgeUser extends GenericUser
 {
     public function hasPermission($permission) { return $this->allowed; }
-    public function getCompany() { return (object) ['id' => $this->company_id, 'status' => $this->disabled ? 1 : 0]; }
+    public function getCompany() { return (object) ['id' => $this->company_id, 'status' => $this->disabled ? 1 : 0, 'currency' => $this->currency]; }
 }
 class BasePermissionFixture
 {
@@ -36,11 +36,17 @@ class BridgeTest extends TestCase
         Schema::create('company', function (Blueprint $table) { $table->string('id')->primary(); });
         DB::table('company')->insert([['id' => 'one'], ['id' => 'two']]);
         (require __DIR__.'/../migrations/2026_09_09_100000_create_cherry_stellar_invoices.php')->up();
+        (require __DIR__.'/../migrations/2026_09_09_110000_link_stellar_purchase_invoice.php')->up();
+        Schema::create('purchase_invoice_approval_events', function (Blueprint $table) { $table->id(); });
+        Schema::create('purchase_invoice', function (Blueprint $table) {
+            $table->id(); $table->string('company_id'); $table->string('invoice_no');
+            $table->string('approval_status'); $table->string('payment_status'); $table->text('input');
+        });
         Http::preventStrayRequests();
     }
-    private function loginAs(string $company = 'one', bool $allowed = true, bool $disabled = false): void
+    private function loginAs(string $company = 'one', bool $allowed = true, bool $disabled = false, string $currency = '£'): void
     {
-        $this->actingAs(new BridgeUser(['id' => $company, 'company_id' => $company, 'allowed' => $allowed, 'disabled' => $disabled]));
+        $this->actingAs(new BridgeUser(['id' => $company, 'company_id' => $company, 'allowed' => $allowed, 'disabled' => $disabled, 'currency' => $currency]));
     }
     private function input(): array
     {
@@ -111,5 +117,72 @@ class BridgeTest extends TestCase
         $this->postJson($url)->assertOk()->assertJsonPath('status', 'reconciled');
         Http::assertSentCount(1);
         Http::assertSent(fn ($request) => $request['record']['xdr'] === 'signed-demo');
+    }
+
+    private function prepared(): array
+    {
+        return [...$this->record(), 'status' => 'prepared', 'xdr' => 'signed-demo', 'hash' => str_repeat('b', 64), 'rate' => '1.28', 'feePence' => 50];
+    }
+
+    private function fakeBaseModel(): void
+    {
+        // Contract fixture only: private base source is not copied into public tests.
+        $this->app->instance('App\\Models\\PurchaseInvoice', new class {
+            public function addNew($data, $type)
+            {
+                if ($type !== 'add' || isset($data['company_id']) || isset($data['payment_status']) || isset($data['approval_status'])) throw new RuntimeException('Incorrect base model call');
+                $id = DB::table('purchase_invoice')->insertGetId(['company_id' => auth()->user()->company_id,
+                    'invoice_no' => $data['invoice_no'], 'approval_status' => 'draft', 'payment_status' => 'unpaid', 'input' => json_encode($data)]);
+                return DB::table('purchase_invoice')->where('id', $id)->first();
+            }
+        });
+    }
+
+    public function test_initiation_creates_one_base_draft_and_confirmation_preserves_link(): void
+    {
+        $this->loginAs(); $this->fakeBaseModel(); $this->insertRecord($this->record());
+        $prepared = $this->prepared();
+        Http::fake(function ($request) use ($prepared) {
+            return Http::response($request['action'] === 'confirm' ? [...$prepared, 'status' => 'reconciled', 'journal' => [['event' => 'Verified']]] : $prepared);
+        });
+        $url = '/stellar/api/invoices/'.$prepared['id'];
+        $first = $this->postJson($url.'/prepare', ['xdr' => 'signed-demo'])->assertOk();
+        $purchaseId = $first->json('purchaseInvoice.id');
+        $this->postJson($url.'/prepare', ['xdr' => 'signed-demo'])->assertOk()->assertJsonPath('purchaseInvoice.id', $purchaseId);
+        $this->assertDatabaseCount('purchase_invoice', 1);
+        $this->assertDatabaseHas('cherry_stellar_invoices', ['purchase_invoice_id' => $purchaseId]);
+        $input = json_decode(DB::table('purchase_invoice')->value('input'), true);
+        $this->assertSame('1.00', $input['amount']);
+        $this->assertSame('Fictional Supplier', $input['supplier_name']);
+        $this->assertSame(0, $input['vat_recoverable']);
+        $this->assertStringContainsString('TESTNET DEMO', $input['notes']);
+        $this->postJson($url.'/confirm')->assertOk()->assertJsonPath('purchaseInvoice.id', $purchaseId);
+        $this->getJson('/stellar/api/invoices')->assertJsonPath('0.purchaseInvoice.id', $purchaseId);
+        $this->assertDatabaseHas('purchase_invoice', ['id' => $purchaseId, 'approval_status' => 'draft', 'payment_status' => 'unpaid']);
+        Http::assertSentCount(2);
+    }
+
+    public function test_invoice_creation_failure_rolls_back_payment_binding(): void
+    {
+        $this->loginAs(); $this->insertRecord($this->record());
+        $this->app->instance('App\\Models\\PurchaseInvoice', new class {
+            public function addNew($data, $type) { throw \Illuminate\Validation\ValidationException::withMessages(['invoice_date' => 'Accounting period is locked.']); }
+        });
+        Http::fake(['127.0.0.1:3001/*' => Http::response($this->prepared())]);
+        $this->postJson('/stellar/api/invoices/'.$this->record()['id'].'/prepare', ['xdr' => 'signed-demo'])->assertStatus(422);
+        $saved = json_decode(DB::table('cherry_stellar_invoices')->value('payload'), true);
+        $this->assertSame('quoted', $saved['status']); $this->assertArrayNotHasKey('xdr', $saved);
+        $this->assertDatabaseCount('purchase_invoice', 0);
+    }
+
+    public function test_missing_approval_workflow_and_non_gbp_company_block_initiation(): void
+    {
+        $this->loginAs('one', true, false, 'EUR'); $this->insertRecord($this->record());
+        Http::fake(['127.0.0.1:3001/*' => Http::response($this->prepared())]);
+        $url = '/stellar/api/invoices/'.$this->record()['id'].'/prepare';
+        $this->postJson($url, ['xdr' => 'signed-demo'])->assertStatus(422);
+        $this->loginAs(); Schema::drop('purchase_invoice_approval_events');
+        $this->postJson($url, ['xdr' => 'signed-demo'])->assertStatus(503);
+        $this->assertDatabaseCount('purchase_invoice', 0);
     }
 }

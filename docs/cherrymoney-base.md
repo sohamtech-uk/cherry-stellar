@@ -15,7 +15,11 @@ The full application retains the base's routes, models, controllers, migrations,
 
 The extension adds a **Stellar payment lab** link to the assembled application's menu and `/stellar` routes under the existing login, web/CSRF, subscription and purchase-permission middleware. It independently checks active company and permission and stores demo invoices, immutable signed envelopes and reconciliation evidence in `cherry_stellar_invoices`, scoped to the authenticated company. Client requests cannot choose a company or submit a trusted journal. Records are saved before broadcast. Verification uses the same Node SDK logic as the public demo through a private loopback service.
 
-Testnet payments still reconcile **demo invoices only**. They do not settle real supplier invoices or alter live accounting. Mapping test tokens to live payables would be a separate production change.
+When the signed payment is first prepared, the extension calls Cherry Money's existing purchase-invoice creation method and creates an **unpaid draft purchase invoice**, marked `STELLAR-TEST`, for the supplier's GBP principal. The draft and signed payment link are saved in the same database transaction before broadcast. Retry/reload uses the same purchase invoice. A link appears in the payment workspace and the draft is visible in Cherry Money's Purchases module.
+
+The existing model's accounting-period checks and creation audit remain in effect. The purchase approval workflow must be migrated and the company's accounting currency must be GBP; otherwise initiation fails before the payment is sent. If draft creation fails, the payment binding rolls back. Demo VAT defaults to no VAT and the simulated service fee is excluded from the supplier principal; both require review for any real invoice.
+
+Testnet settlement reconciles the **demo payment record** and retains its purchase-invoice link. It does not approve the native draft, mark it paid, post a real supplier payment or convert test tokens into real funds. The draft is a real record in the development company's database, labelled as a test. Use a development company and never approve it as a real bill. Existing prepared payments created before this feature are not backfilled, avoiding a new invoice during an uncertain retry.
 
 ## Set up the full application
 

@@ -28,6 +28,12 @@ function render() {
   $('details').hidden = !selected; $('empty').hidden = !!selected;
   $('state').textContent = selected?.status.toUpperCase() || 'READY';
   $('evidence').hidden = !selected?.hash;
+  const purchase = selected?.purchaseInvoice;
+  $('purchase-invoice-record').hidden = !purchase || !/^\d+$/.test(String(purchase.id));
+  if (!$('purchase-invoice-record').hidden) {
+    $('purchase-invoice-link').href = `/purchase-invoice/${purchase.id}/edit`;
+    $('purchase-invoice-link').textContent = `Open Cherry Money purchase invoice ${purchase.number}`;
+  }
   document.querySelectorAll('button').forEach(button => { button.disabled = busy; });
   if (!selected) return;
   const r = selected;

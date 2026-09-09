@@ -89,7 +89,15 @@ class StellarController extends Controller
             abort_unless($action === 'prepare' ? $record['status'] === 'quoted' : $record['status'] === 'prepared', 409);
             $verified = $this->verify(['action' => $action, 'record' => $record, 'xdr' => $request->input('xdr')]);
             abort_unless($verified['id'] === $record['id'], 503);
+            if ($action === 'prepare') {
+                abort_unless($verified['status'] === 'prepared', 503);
+                $verified['purchaseInvoice'] = app(PurchaseInvoiceWriter::class)->createDraft($verified);
+            } elseif (isset($record['purchaseInvoice'])) {
+                // The stateless verifier owns settlement evidence, not our accounting link.
+                $verified['purchaseInvoice'] = $record['purchaseInvoice'];
+            }
             $this->query($request)->where('id', $id)->update(['hash' => $verified['hash'] ?? null,
+                'purchase_invoice_id' => $verified['purchaseInvoice']['id'] ?? null,
                 'payload' => json_encode($verified, JSON_THROW_ON_ERROR), 'updated_at' => now()]);
             return $verified;
         });
