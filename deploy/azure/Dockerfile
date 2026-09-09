@@ -11,6 +11,7 @@ COPY deploy/azure/apply.mjs deploy/azure/apply.mjs
 COPY base.lock.json ./
 COPY public/ public/
 COPY extensions/cherrymoney/src/ extensions/cherrymoney/src/
+COPY extensions/cherrymoney/views/ extensions/cherrymoney/views/
 COPY extensions/cherrymoney/migrations/ extensions/cherrymoney/migrations/
 COPY extensions/cherrymoney/config.php extensions/cherrymoney/adapter.js extensions/cherrymoney/
 COPY --from=cherry_money /var/www/html/bootstrap/app.php /overlay/bootstrap/app.php

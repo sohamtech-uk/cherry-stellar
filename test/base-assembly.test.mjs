@@ -12,7 +12,11 @@ test('full-base assembly preserves existing modules, pins source and refuses ove
   try {
     for (const path of ['bootstrap', 'app', 'resources/views/layout', 'database/migrations', 'config']) await mkdir(join(source, path), { recursive: true });
     await writeFile(join(source, 'bootstrap/app.php'), '<?php\n$app = new ExampleApplication;\nreturn $app;\n');
-    await writeFile(join(source, 'resources/views/layout/menu.blade.php'), '<ul class="sidebar-menu"><li>Existing navigation</li></ul>');
+    await writeFile(join(source, 'resources/views/layout/menu.blade.php'), `<ul class="sidebar-menu"><li>Existing navigation</li>
+@if($hasSalesPermission)
+<li><a href="{{ Asset('dashboard/cherry-pay') }}">Cherry Pay</a></li>
+@endif
+</ul>`);
     await writeFile(join(source, 'app/ExistingFeature.php'), '<?php // synthetic existing feature; preserve exactly\n');
     run('git', ['init', '-q'], source); run('git', ['add', '.'], source);
     run('git', ['-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-qm', 'Synthetic base'], source);
@@ -32,6 +36,11 @@ test('full-base assembly preserves existing modules, pins source and refuses ove
     assert.match(await readFile(join(runtime, 'bootstrap/app.php'), 'utf8'), /StellarServiceProvider/);
     const page = await readFile(join(runtime, 'resources/views/cherry-stellar/index.blade.php'), 'utf8');
     assert.match(page, /csrf_token/); assert.match(page, /cherry-stellar\/adapter.js/); assert.doesNotMatch(page, /src="\/app.js"/);
+    const menu = await readFile(join(runtime, 'resources/views/layout/menu.blade.php'), 'utf8');
+    assert.match(menu, /<li>Existing navigation<\/li>/);
+    assert.match(menu, /@include\("cherry-stellar.navigation"\)/);
+    assert.doesNotMatch(menu, /Stellar payment lab/);
+    assert.match(await readFile(join(runtime, 'resources/views/cherry-stellar/navigation.blade.php'), 'utf8'), /Cherry Stellar/);
     await writeFile(join(runtime, '.env'), 'SYNTHETIC_SETTING=keep');
     assert.throws(() => run(process.execPath, ['scripts/assemble-base.mjs']), /Assembly already exists/);
     assert.equal(await readFile(join(runtime, '.env'), 'utf8'), 'SYNTHETIC_SETTING=keep');

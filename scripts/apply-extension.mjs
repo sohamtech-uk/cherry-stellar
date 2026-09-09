@@ -23,6 +23,7 @@ export async function applyExtension(root, destination, metadata) {
     .replace('<main>', '<main><p><a href="/home">← Cherry Money workspace</a></p>')
     .replace('Local demo records only', 'Company-scoped demo records · Cherry Money base');
   await mkdir(resolve(destination, 'resources/views/cherry-stellar'), { recursive: true });
+  await cp(resolve(root, 'extensions/cherrymoney/views'), resolve(destination, 'resources/views/cherry-stellar'), { recursive: true });
   await writeFile(resolve(destination, 'resources/views/cherry-stellar/index.blade.php'), html);
   const bootstrapPath = resolve(destination, 'bootstrap/app.php');
   const bootstrap = await readFile(bootstrapPath, 'utf8');
@@ -30,10 +31,13 @@ export async function applyExtension(root, destination, metadata) {
   await writeFile(bootstrapPath, bootstrap.replace('return $app;', '$app->register(\\App\\CherryStellar\\StellarServiceProvider::class);\n\nreturn $app;'));
   const menuPath = resolve(destination, 'resources/views/layout/menu.blade.php');
   const menu = await readFile(menuPath, 'utf8');
-  const marker = '<ul class="sidebar-menu">';
-  if ((menu.split(marker).length - 1) !== 1) throw new Error('Upstream navigation changed; review the integration before proceeding.');
-  await writeFile(menuPath, menu.replace(marker, marker + '\n@if(config("cherry-stellar.enabled") && !$subscriptionExpired && $hasPurchasingPermission)\n<li><a class="navItem" href="{{ url("stellar") }}">Stellar payment lab</a></li>\n@endif'));
+  // Replace only Cherry Pay's existing entry. Keep its original behaviour when
+  // Stellar is unavailable, including access for users with sales permissions.
+  const cherryPayEntry = /@if\(\$hasSalesPermission\)\s*<li\b[^>]*>\s*<a\b[^>]*href="\{\{\s*Asset\('dashboard\/cherry-pay'\)\s*\}\}"[^>]*>[\s\S]*?<\/a>\s*<\/li>\s*@endif/g;
+  if ([...menu.matchAll(cherryPayEntry)].length !== 1) throw new Error('Upstream Cherry Pay navigation changed; review the integration before proceeding.');
+  await writeFile(menuPath, menu.replace(cherryPayEntry, original =>
+    '@if(config("cherry-stellar.enabled") && !$subscriptionExpired && $hasPurchasingPermission)\n' +
+    '@include("cherry-stellar.navigation")\n@else\n' + original + '\n@endif'));
   
   await writeFile(resolve(destination, 'CHERRY_STELLAR_BASE.json'), JSON.stringify(metadata, null, 2));
 }
-
