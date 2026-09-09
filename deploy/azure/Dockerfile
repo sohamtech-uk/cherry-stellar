@@ -34,9 +34,10 @@ COPY deploy/azure/start.sh /usr/local/bin/cherry-stellar-start
 COPY deploy/azure/migrate.php /opt/cherry-stellar/migrate.php
 WORKDIR /var/www/html
 RUN chmod 755 /usr/local/bin/cherry-stellar-start \
+    && chmod -R a+rX /opt/cherry-stellar \
     && command -v runuser \
     && command -v cherrybank-entrypoint \
-    && node --check /opt/cherry-stellar/scripts/verifier.mjs \
+    && runuser -u www-data -- node --check /opt/cherry-stellar/scripts/verifier.mjs \
     && php -l /opt/cherry-stellar/migrate.php \
     && php -r 'require "vendor/autoload.php"; if (!class_exists("App\\CherryStellar\\StellarController")) exit(1);' \
     && APP_ENV=testing CACHE_DRIVER=array LOG_CHANNEL=stderr php artisan route:list --path=stellar --json
