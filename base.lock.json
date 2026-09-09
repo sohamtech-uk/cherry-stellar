@@ -1,0 +1,8 @@
+{
+  "repository": "sohamtech-uk/cherrymoney",
+  "path": "base/cherrymoney",
+  "ref": "main",
+  "commit": "12b646a1e54e2ce511a8d860b863d060f8dea3da",
+  "framework": "Laravel 10",
+  "integration": "extensions/cherrymoney"
+}

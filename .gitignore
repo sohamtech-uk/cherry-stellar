@@ -4,3 +4,6 @@ data/
 *.log
 dist/
 .vercel/
+.runtime/
+extensions/cherrymoney/vendor/
+extensions/cherrymoney/.phpunit.cache/

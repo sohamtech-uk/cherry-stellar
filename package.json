@@ -7,6 +7,8 @@
     "node": "22.x"
   },
   "scripts": {
+    "base:assemble": "node scripts/assemble-base.mjs",
+    "start:verifier": "node scripts/verifier.mjs",
     "start": "node server.mjs",
     "build": "node scripts/build.mjs",
     "test": "node --test",
