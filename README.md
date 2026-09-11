@@ -4,9 +4,13 @@ A standalone supplier-payment demo: invoice → illustrative GBP quote → Stell
 
 This repository is independently implemented and contains no Cherry Money application code, database, credentials or private Git history. It requires no Finexer connectivity.
 
-## Vercel hosted mode
+## Cherry Money test demo
 
-Live demo: **https://cherry-stellar-beta.vercel.app/**
+Live demo: **https://test.cherrymoney.co.uk/**
+
+Open the Cherry Money test environment and go to **Cherry Pay** to test the Stellar payment demo.
+
+The standalone Vercel deployment was used during development; use the Cherry Money test environment above for current demo testing.
 
 `npm run build` creates static assets in `dist`; `api/demo.mjs` provides stateless quote/envelope/settlement verification. `vercel.json` configures both. No database credentials or wallet secrets are needed.
 
@@ -14,7 +18,7 @@ Live demo: **https://cherry-stellar-beta.vercel.app/**
 
 The server reconstructs illustrative quotes and validates signatures and live Horizon evidence; it never trusts a submitted status, journal, rate or hash. Browser records are visitor-controlled demo data, not tamper-proof accounting. Duplicate prevention is scoped to that browser using IndexedDB unique indexes, atomic writes and Web Locks. The hosted demo is not a multi-user financial service.
 
-To deploy your own copy on Vercel, import the feature branch and use the included configuration. Keep existing Vercel deployment protection settings. Wallet secrets remain browser-memory-only in both modes. The local file server below is unchanged and must still remain loopback-only.
+To deploy your own standalone copy on Vercel, import the feature branch and use the included configuration. Keep existing Vercel deployment protection settings. Wallet secrets remain browser-memory-only in both modes. The local file server below is unchanged and must still remain loopback-only.
 
 ## Run locally
 
